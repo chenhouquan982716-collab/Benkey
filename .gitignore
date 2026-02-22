@@ -1,0 +1,15 @@
+# Xcode user data
+xcuserdata/
+*.xcuserstate
+DerivedData/
+
+# macOS
+.DS_Store
+
+# Local secrets and env files
+Benkey/Mykeyboard/LocalSecrets.swift
+*.keys
+*.env
+
+# Logs
+*.log

@@ -1,0 +1,122 @@
+# Mykeyboard 工作流程汇总（2026-02-20）
+
+## 概览
+- 目标：在 Benkey 工程新增 Custom Keyboard Extension（Mykeyboard），并在键盘界面显示“我的第一个键盘”按钮。
+- 产出：扩展 Target、纯代码 UIKit 键盘界面、可在模拟器启用并验证。
+
+## 环境准备
+- 确认 Xcode 15.4 并清理 Beta：
+  - xcode-select 指向 /Applications/Xcode.app/Contents/Developer
+  - 删除 /Applications/Xcode-beta.app（如存在）
+- 安装运行时与模拟器：
+  - Xcode → Settings → Platforms → 安装 iOS 17.5
+  - 创建并启动 iPhone 15 模拟器（UDID 示例：991F3426-92DD-4E5A-AB71-9012695E6F0D）
+- 软键盘显示：
+  - 模拟器菜单（中文）：设备 → 键盘 → 取消“连接硬件键盘”，或使用快捷键 Command+K。
+
+## 工程创建与版本控制
+- 创建宿主 App：File → New → Project… → iOS App（SwiftUI）
+- 解决 Git 仓库创建失败：
+  - 终端配置：git config --global user.name / user.email
+  - 初始化并首个提交：git init、git add -A、git commit -m "Initial commit"
+- 可选：通过网页创建 GitHub 仓库，使用 Add file → Upload files 上传工程（避免上传 xcuserdata、DerivedData 等）。
+
+## 新增扩展 Target
+- 入口一：File → New → Target…
+- 入口二：选中蓝色工程图标 → “TARGETS”左下角“+”
+- 模板：iOS → Application Extension → Custom Keyboard Extension
+- 创建后：
+  - 勾选 Embed in Application 为 Benkey
+  - 激活扩展 Scheme，并在 Product → Scheme → Edit Scheme → Run → Executable 选择 Benkey.app
+
+## 扩展实现（纯代码 UIKit）
+- Info.plist（Mykeyboard → Info）关键配置：
+  - NSExtensionPointIdentifier = com.apple.keyboard-service
+  - NSExtensionPrincipalClass = $(PRODUCT_MODULE_NAME).KeyboardViewController
+  - 不使用 storyboard（移除或清空 NSExtensionMainStoryboard）
+- 键盘界面代码：[KeyboardViewController.swift](file:///Users/houquanchen/Documents/trae_projects/Benkey/Mykeyboard/KeyboardViewController.swift)
+
+```swift
+import UIKit
+
+final class KeyboardViewController: UIInputViewController {
+    private lazy var titleButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setTitle("我的第一个键盘", for: .normal)
+        b.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
+        b.translatesAutoresizingMaskIntoConstraints = false
+        b.addTarget(self, action: #selector(onTitleTap), for: .touchUpInside)
+        return b
+    }()
+
+    private lazy var nextKeyboardButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setTitle("🌐", for: .normal)
+        b.translatesAutoresizingMaskIntoConstraints = false
+        b.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
+        return b
+    }()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemGray6
+
+        view.addSubview(titleButton)
+        view.addSubview(nextKeyboardButton)
+
+        let g = view.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            titleButton.centerXAnchor.constraint(equalTo: g.centerXAnchor),
+            titleButton.centerYAnchor.constraint(equalTo: g.centerYAnchor),
+
+            nextKeyboardButton.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 12),
+            nextKeyboardButton.bottomAnchor.constraint(equalTo: g.bottomAnchor, constant: -8)
+        ])
+    }
+
+    override func viewWillLayoutSubviews() {
+        nextKeyboardButton.isHidden = !needsInputModeSwitchKey
+        super.viewWillLayoutSubviews()
+    }
+
+    @objc private func onTitleTap() {
+        textDocumentProxy.insertText(" ")
+    }
+}
+```
+
+## 启用与验证
+- 在模拟器（中文）路径：设置 → 通用 → 键盘 → 键盘 → 添加新键盘… → 选择“Mykeyboard — Benkey”
+- 打开任意输入框，长按地球仪选择“Mykeyboard”，可见按钮“我的第一个键盘”，点击会插入空格。
+
+## 建议与最佳实践
+- 版本控制：
+  - 使用 Xcode/Swift 的 .gitignore，避免提交 xcuserdata、DerivedData、build 等。
+  - 共享 Scheme：Manage Schemes… 勾选 Shared，以便团队可运行扩展。
+  - 优先使用 SSH 密钥推送到 GitHub；在 GitHub 账户设置添加公钥后使用 git@github.com:<user>/<repo>.git。
+- 工程设置：
+  - Mykeyboard 的 iOS Deployment Target 不要高于模拟器版本（建议 ≤ 17.5）。
+  - Info.plist 保持 RequestsOpenAccess = false（最小权限），不要采集键入数据。
+- 文档与测试：
+  - 在仓库添加 README，写明启用步骤与常见问题（硬件键盘连接导致软键盘隐藏等）。
+  - 后续可添加最小 UI 测试，验证按钮存在与点击插入行为。
+
+## 后续计划（建议）
+- 增加更多按键与布局，支持文本输入与删除。
+- 增加本地化文案与主题适配（浅色/深色）。
+- 设计键盘高度与安全区适配，兼容横屏。
+- 研究 RequestsOpenAccess 打开后的能力与隐私边界。
+
+## 附录
+- 关键文件链接：
+  - [KeyboardViewController.swift](file:///Users/houquanchen/Documents/trae_projects/Benkey/Mykeyboard/KeyboardViewController.swift)
+  - [Info.plist](file:///Users/houquanchen/Documents/trae_projects/Benkey/Mykeyboard/Info.plist)
+- 常用命令：
+  - 验证 Xcode：xcode-select -p；xcodebuild -version
+  - 模拟器：xcrun simctl list runtimes；xcrun simctl list devices
+  - Git 初始化与提交：
+    - git init；git add -A；git commit -m "Initial commit"
+  - 远端推送（SSH）：
+    - git remote add origin git@github.com:<user>/<repo>.git
+    - git push -u origin main
+

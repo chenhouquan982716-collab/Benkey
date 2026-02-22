@@ -1,0 +1,58 @@
+# 项目上下文汇总（用于任务交接）
+
+## 当前状态
+- 开发环境：Xcode 15.4（命令行工具已指向稳定版）。
+- 运行时与设备：已安装 iOS 17.5；iPhone 15 模拟器可用并已验证软键盘显示。 
+- 宿主 App：Benkey（SwiftUI）已创建并可运行。
+- 扩展 Target：Mykeyboard 已添加，并嵌入 Benkey。Scheme 可用（Mykeyboard/Copy of Mykeyboard）。
+- 键盘界面：采用纯 UIKit 布局，居中显示“我的第一个键盘”按钮，左下角保留“🌐”切换按钮，点击插入空格。
+- Info.plist：已配置键盘扩展点与主类，未使用 storyboard。
+- 版本控制：本地 Git 仓库 main 分支有效；GitHub 仓库已通过网页上传关键文件与目录，避免了 xcuserdata 等个人文件。
+
+## 关键文件与链接
+- 键盘控制器：[KeyboardViewController.swift](file:///Users/houquanchen/Documents/trae_projects/Benkey/Mykeyboard/KeyboardViewController.swift)
+- 扩展配置：[Info.plist](file:///Users/houquanchen/Documents/trae_projects/Benkey/Mykeyboard/Info.plist)
+- 工程文件夹（双击打开）：[Benkey.xcodeproj](file:///Users/houquanchen/Documents/trae_projects/Benkey/Benkey.xcodeproj)
+- 工作流程文档：[Mykeyboard_Workflow_2026-02-20.md](file:///Users/houquanchen/Documents/trae_projects/Benkey/Mykeyboard_Workflow_2026-02-20.md)
+
+## 操作要点
+- 选择扩展 Scheme：顶部选择 Mykeyboard（或 Copy of Mykeyboard）。
+- 绑定宿主可执行：Product → Scheme → Edit Scheme → Run → Executable 选择 Benkey.app。
+- 启用键盘（中文系统）：设置 → 通用 → 键盘 → 键盘 → 添加新键盘… → 选择“Mykeyboard — Benkey”。
+- 显示软键盘：模拟器菜单 → 设备 → 键盘 → 取消“连接硬件键盘”，或按 Command+K。
+
+## 重要配置
+- Info.plist（扩展）：
+  - NSExtensionPointIdentifier = com.apple.keyboard-service
+  - NSExtensionPrincipalClass = $(PRODUCT_MODULE_NAME).KeyboardViewController
+  - 不使用 NSExtensionMainStoryboard（纯代码实现）。
+- 部署版本：建议 Mykeyboard 的 iOS Deployment Target ≤ 17.5。 
+- .gitignore：忽略 DerivedData、build、xcuserdata、*.xcuserstate 等。
+
+## 已完成工作
+- 安装并验证 iOS 17.5 模拟器与设备启动。
+- 创建 Benkey 宿主 App 与 Mykeyboard 扩展 Target，完成嵌入配置。
+- 使用纯 UIKit 实现最简按钮界面与“下一键盘”切换按钮。
+- 修正 Info.plist 以指向 KeyboardViewController 而非 storyboard。
+- 初始化 Git，本地提交；通过网页创建并上传到 GitHub（工程结构与源码正确）。
+
+## 建议（流程优化）
+- 共享 Scheme：保留 xcshareddata/xcschemes/*.xcscheme，团队可直接运行扩展。
+- 远端推送：优先使用 SSH；在 GitHub 账户添加公钥后配置远端并 git push -u origin main。 
+- 文档化：仓库添加 README（包含启用步骤、软键盘显示说明、常见问题）。
+- 测试与质量：添加最小 UI 测试（按钮存在与点击插入行为），并在 PR 流程中运行。
+- 隐私与权限：RequestsOpenAccess 保持 false；后续如需网络/剪贴板访问，再评估开启并声明用途。
+
+## 下一步任务建议（可直接作为待办）
+- 扩展按钮行为：支持插入固定文本与删除（Backspace）。
+- 键盘布局：增加多行按键布局、适配安全区与横屏。
+- 主题与本地化：适配浅/深色模式与中文/英文文案。
+- README：补充使用说明与截图（模拟器启用与切换）。
+- Git 远端：完成 SSH 公钥添加与首次 push；在 README 中记录克隆与运行步骤。
+
+## 常用命令备忘
+- 验证 Xcode：`xcode-select -p`、`xcodebuild -version`
+- 模拟器：`xcrun simctl list runtimes`、`xcrun simctl list devices`
+- Git（本地）：`git add -A`、`git commit -m "<msg>"`
+- Git（远端）：`git remote add origin git@github.com:<user>/<repo>.git`、`git push -u origin main`
+
